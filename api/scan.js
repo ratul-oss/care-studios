@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     // ==========================================================
     // !!! THIS IS THE CORRECT, SAFE LOGIC !!!
     // We check for all parts before trying to access them
-    // ==========================================================
+    // =================================.=========================
     if (detection && detection.pages && detection.pages.length > 0 && detection.pages[0].boundingBox && detection.pages[0].boundingBox.vertices) {
       
       // AI found the page corners

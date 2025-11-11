@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Care Studio – Smart Document Tools</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <h1 id="logo">CareGuideStudio</h1>
+  <nav>
+    <button data-tool="scan">📷 Scan Docs</button>
+    <button data-tool="jpg2pdf">🖼️ JPG → PDF</button>
+    <button data-tool="pdf2jpg">📄 PDF → JPG</button>
+    <button data-tool="mergepdf">📚 Merge PDFs</button>
+  </nav>
+</header>
+
+<main id="tool-container">
+  <div class="welcome">
+    <h2>Welcome to <span>Care Guide Studio</span></h2>
+    <p>Your all-in-one offline document utility.</p>
+  </div>
+</main>
+
+<footer>
+  © 2025 HR Enrollment Team – All rights reserved
+</footer>
+
+<!-- Local libraries -->
+<script src="libs/opencv.js"></script>
+<script src="libs/pdf-lib.min.js"></script>
+<script src="libs/pdf.min.js"></script>
+
+<!-- App scripts -->
+<script src="js/ui.js"></script>
+<script src="js/scan.js"></script>
+<script src="js/jpg2pdf.js"></script>
+<script src="js/pdf2jpg.js"></script>
+<script src="js/mergepdf.js"></script>
+
+</body>
+</html>

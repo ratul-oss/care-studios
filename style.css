@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+:root {
+  --brand1: #00b4db;
+  --brand2: #0083b0;
+  --bg: #f7fafc;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: #222;
+}
+
+header {
+  background: linear-gradient(90deg, var(--brand1), var(--brand2));
+  padding: 20px;
+  text-align: center;
+  color: white;
+  animation: fadeIn 2s ease;
+}
+
+#logo {
+  font-size: 2em;
+  letter-spacing: 2px;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 5px #fff, 0 0 10px #00b4db; }
+  to { text-shadow: 0 0 20px #fff, 0 0 30px #0083b0; }
+}
+
+nav {
+  margin-top: 10px;
+}
+
+nav button {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: none;
+  margin: 5px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+nav button:hover {
+  background: #fff;
+  color: var(--brand2);
+  transform: scale(1.05);
+}
+
+main {
+  max-width: 1000px;
+  margin: 30px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  min-height: 60vh;
+  animation: fadeInUp 0.8s ease;
+}
+
+footer {
+  text-align: center;
+  color: #666;
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.previewGrid, .resultGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.scannedPage {
+  width: 220px;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.btn {
+  background: linear-gradient(90deg, #00b4db, #0083b0);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  margin-right: 6px;
+  transition: 0.2s ease-in-out;
+}
+.btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(90deg, #0083b0, #00b4db);
+}

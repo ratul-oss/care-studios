@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     // ==========================================================
     // !!! THIS IS THE CORRECT, SAFE LOGIC !!!
     // We check for all parts before trying to access them
-    // =================================.=========================
+    // ==========================================================
     if (detection && detection.pages && detection.pages.length > 0 && detection.pages[0].boundingBox && detection.pages[0].boundingBox.vertices) {
       
       // AI found the page corners
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     } else {
       // AI ran but did not find a page in the image
       console.warn("Google AI did not find any document pages in the image.");
-      res.status(404).json({ success: false, error: 'No document page found by AI.' });
+      res.status(444).json({ success: false, error: 'No document page found by AI.' }); // Using 444 as a custom "no document" code
     }
     
   } catch (error) {

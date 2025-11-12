@@ -16,7 +16,13 @@ function loadScanUI() {
   const container = document.getElementById('tool-container');
   container.innerHTML = `
     <h2>📷 Document Scanner</h2>
-    <p>Upload your files below. The tool will automatically detect, crop, and enhance like CamScanner — all offline.</p>
+    <p>Upload your files below. The tool will automatically detect, crop, and enhance like CamScanner.</p>
+    
+    <!-- Pro Tip Box -->
+    <div style="padding: 10px 15px; background: #fff8e1; border-left: 5px solid #ffc107; margin-bottom: 15px; border-radius: 5px;">
+      <strong>Pro Tip:</strong> For a perfect scan, place your document on a <strong>dark-colored background</strong> before you take a photo.
+    </div>
+
     <div class="controls">
       <input type="file" id="scanFiles" accept="image/*" multiple>
       <button id="scanProcess" class="btn">Detect & Enhance</button>
@@ -64,12 +70,17 @@ async function processAllFiles() {
 
   processedImages = [];
   const resultDiv = document.getElementById('scanResult');
-  resultDiv.innerHTML = '';
+  resultDiv.innerHTML = '<p class="loading">Scanning... this may take a moment.</p>'; // Loading message
 
   for (const file of input.files) {
     try {
       const enhanced = await processSingleFile(file);
       processedImages.push(enhanced);
+      
+      if(resultDiv.innerHTML.includes('<p class="loading">')) {
+         resultDiv.innerHTML = ''; // Clear loading message on first success
+      }
+      
       const img = new Image();
       img.src = enhanced;
       img.className = 'scannedPage';
@@ -79,8 +90,14 @@ async function processAllFiles() {
       alert(`Failed to process ${file.name}`);
     }
   }
-
-  alert('✅ Enhancement complete! Scroll down to preview.');
+  
+  if(resultDiv.innerHTML.includes('<p class="loading">')) {
+     resultDiv.innerHTML = ''; // Clear loading if all failed
+  }
+  
+  if(processedImages.length > 0) {
+    alert('✅ Enhancement complete! Scroll down to preview.');
+  }
 }
 
 // =================================================================
@@ -100,8 +117,8 @@ async function processSingleFile(file) {
   });
 
   // 2. Send the image to your new Vercel "lockbox"
-  // This is your live URL from the Vercel screenshot!
-  const VERCEL_URL = 'https://care-studios-git-main-ratul-oss-projects.vercel.app/api/scan'; 
+  // !!! THIS IS THE CORRECTED URL !!!
+  const VERCEL_URL = 'https://care-studios.vercel.app/api/scan'; 
 
   let data;
   try {
@@ -130,6 +147,7 @@ async function processSingleFile(file) {
     return await applyCropAndEnhance(file, data.corners);
   } else {
     // AI failed. Fall back to just resizing.
+    console.warn("AI did not find corners. Falling back to simple resize.");
     return await applyCropAndEnhance(file, null);
   }
 }
@@ -194,7 +212,12 @@ async function applyCropAndEnhance(file, corners) {
     };
   });
 }
+// =================================================================
+// ^ ^ ^ THIS SECTION HAS BEEN REPLACED ^ ^ ^
+// =================================================================
 
+
+// Merge enhanced pages into one A4 PDF (Unchanged)
 async function downloadPDF() {
   if (!processedImages.length) return alert('No processed images found.');
   const pdfDoc = await PDFLib.PDFDocument.create();
@@ -219,5 +242,4 @@ async function downloadPDF() {
   link.href = URL.createObjectURL(blob);
   link.download = 'CareStudio_Scanned.pdf';
   link.click();
-
 }

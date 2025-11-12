@@ -101,7 +101,7 @@ async function processSingleFile(file) {
 
   // 2. Send the image to your new Vercel "lockbox"
   // This is your live URL from the Vercel screenshot!
-  const VERCEL_URL = 'https://care-studios.vercel.app/api/scan'; 
+  const VERCEL_URL = 'https://care-studios-git-main-ratul-oss-projects.vercel.app/api/scan'; 
 
   let data;
   try {
@@ -219,4 +219,5 @@ async function downloadPDF() {
   link.href = URL.createObjectURL(blob);
   link.download = 'CareStudio_Scanned.pdf';
   link.click();
+
 }

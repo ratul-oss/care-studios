@@ -1,70 +1,190 @@
-// =========================
-// Care Studio - JPG to PDF Tool
-// =========================
+// =====================================
+// Care Studio - Advanced Image to PDF
+// =====================================
 
-// This function is called by ui.js when the button is clicked
-function loadJPGtoPDFUI() {
+let uploadedImages = [];
+
+// UI Loader
+function loadImageToPDFUI() {
   const container = document.getElementById('tool-container');
   container.innerHTML = `
-    <h2>🖼️ JPG to PDF Converter</h2>
-    <p>Upload one or more JPG images to combine into a single PDF.</p>
-    <div class="controls">
-      <input type="file" id="jpgFiles" accept="image/jpeg" multiple>
-      <button id="jpgConvertBtn" class="btn">Convert to PDF</button>
+    <h2>🖼️ Image to PDF Converter</h2>
+    <p>Upload JPG or PNG images. Drag, reorder, remove, scan & convert.</p>
+
+    <div id="dropZone" class="dropZone">
+      Drag & Drop Images Here or Click to Upload
+      <input type="file" id="imageInput" accept="image/jpeg,image/png" multiple hidden>
     </div>
-    <div id="jpgPreview" class="previewGrid"></div>
+
+    <div class="controls">
+      <label>
+        <input type="checkbox" id="bwMode"> Scan Mode (Black & White)
+      </label>
+
+      <select id="pageSize">
+        <option value="auto">Auto Page Size</option>
+        <option value="A4">A4</option>
+        <option value="LETTER">Letter</option>
+      </select>
+
+      <button class="btn" id="convertBtn">Convert to PDF</button>
+    </div>
+
+    <div id="previewGrid" class="previewGrid"></div>
   `;
 
-  document.getElementById('jpgFiles').addEventListener('change', handleJPGPreview);
-  document.getElementById('jpgConvertBtn').addEventListener('click', convertToPDF);
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('imageInput');
+
+  dropZone.onclick = () => fileInput.click();
+  fileInput.onchange = e => handleFiles(e.target.files);
+
+  dropZone.ondragover = e => {
+    e.preventDefault();
+    dropZone.classList.add('dragOver');
+  };
+
+  dropZone.ondragleave = () => dropZone.classList.remove('dragOver');
+
+  dropZone.ondrop = e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragOver');
+    handleFiles(e.dataTransfer.files);
+  };
+
+  document.getElementById('convertBtn').onclick = convertToPDF;
 }
 
-// Show a preview of the selected images
-function handleJPGPreview(event) {
-  const preview = document.getElementById('jpgPreview');
-  preview.innerHTML = '';
-  for (const file of event.target.files) {
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(file);
-    img.className = 'scannedPage'; // Use existing style
-    preview.appendChild(img);
+// ==========================
+// Handle Uploads
+// ==========================
+function handleFiles(files) {
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+
+    uploadedImages.push({
+      file,
+      url: URL.createObjectURL(file)
+    });
   }
+  renderPreview();
 }
 
-// The main conversion logic
+// ==========================
+// Preview Grid
+// ==========================
+function renderPreview() {
+  const grid = document.getElementById('previewGrid');
+  grid.innerHTML = '';
+
+  uploadedImages.forEach((img, index) => {
+    const div = document.createElement('div');
+    div.className = 'previewItem';
+
+    div.innerHTML = `
+      <img src="${img.url}">
+      <div class="previewActions">
+        <button onclick="moveImage(${index}, -1)">⬆️</button>
+        <button onclick="moveImage(${index}, 1)">⬇️</button>
+        <button onclick="removeImage(${index})">❌</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function moveImage(index, dir) {
+  const newIndex = index + dir;
+  if (newIndex < 0 || newIndex >= uploadedImages.length) return;
+  [uploadedImages[index], uploadedImages[newIndex]] =
+  [uploadedImages[newIndex], uploadedImages[index]];
+  renderPreview();
+}
+
+function removeImage(index) {
+  uploadedImages.splice(index, 1);
+  renderPreview();
+}
+
+// ==========================
+// Image Processing
+// ==========================
+async function processImage(file, bwMode) {
+  if (!bwMode) return file.arrayBuffer();
+
+  const img = new Image();
+  img.src = URL.createObjectURL(file);
+  await img.decode();
+
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < data.data.length; i += 4) {
+    const avg = (data.data[i] + data.data[i + 1] + data.data[i + 2]) / 3;
+    const bw = avg > 180 ? 255 : 0;
+    data.data[i] = data.data[i + 1] = data.data[i + 2] = bw;
+  }
+  ctx.putImageData(data, 0, 0);
+
+  return new Promise(resolve => canvas.toBlob(b => b.arrayBuffer().then(resolve), 'image/jpeg', 0.6));
+}
+
+// ==========================
+// Convert to PDF
+// ==========================
 async function convertToPDF() {
-  const input = document.getElementById('jpgFiles');
-  if (!input.files.length) return alert('Please select one or more JPG images.');
+  if (!uploadedImages.length) {
+    alert('No images uploaded.');
+    return;
+  }
+
+  const bwMode = document.getElementById('bwMode').checked;
+  const pageSize = document.getElementById('pageSize').value;
 
   const pdfDoc = await PDFLib.PDFDocument.create();
-  const A4_W = 595.28, A4_H = 841.89; // A4 page size in points
 
-  for (const file of input.files) {
-    // Read the file into memory
-    const jpgBytes = await file.arrayBuffer();
-    // Embed the JPG image
-    const jpgImage = await pdfDoc.embedJpg(jpgBytes);
-    
-    const page = pdfDoc.addPage([A4_W, A4_H]);
-    
-    // Scale the image to fit the A4 page
-    const { width: imgW, height: imgH } = jpgImage.scaleToFit(A4_W, A4_H);
+  for (const img of uploadedImages) {
+    const imgBytes = await processImage(img.file, bwMode);
 
-    // Draw the image centered on the page
-    page.drawImage(jpgImage, {
-      x: (A4_W - imgW) / 2,
-      y: (A4_H - imgH) / 2,
-      width: imgW,
-      height: imgH,
+    const embedded = img.file.type === 'image/png'
+      ? await pdfDoc.embedPng(imgBytes)
+      : await pdfDoc.embedJpg(imgBytes);
+
+    let pageW = embedded.width;
+    let pageH = embedded.height;
+
+    if (pageSize === 'A4') {
+      pageW = 595.28;
+      pageH = 841.89;
+    } else if (pageSize === 'LETTER') {
+      pageW = 612;
+      pageH = 792;
+    }
+
+    const page = pdfDoc.addPage([pageW, pageH]);
+    const { width, height } = embedded.scaleToFit(pageW, pageH);
+
+    page.drawImage(embedded, {
+      x: (pageW - width) / 2,
+      y: (pageH - height) / 2,
+      width,
+      height
     });
   }
 
-  // Save the PDF
-  const pdfBytes = await pdfDoc.save();
+  const pdfBytes = await pdfDoc.save({ useObjectStreams: true });
+
   const blob = new Blob([pdfBytes], { type: 'application/pdf' });
   const link = document.createElement('a');
+
+  const baseName = uploadedImages[0].file.name.split('.')[0];
+  link.download = `CareStudio_${baseName}.pdf`;
   link.href = URL.createObjectURL(blob);
-  link.download = 'CareStudio_Converted.pdf';
   link.click();
 
   alert('✅ PDF created successfully!');
